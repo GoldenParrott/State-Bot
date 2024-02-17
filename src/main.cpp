@@ -148,7 +148,18 @@ void opcontrol() {
 			waitUntil(Master.get_digital(DIGITAL_R1)==false);
 			pbr = false;
 		}
-
+		
+	  //Shield
+		if((Master.get_digital(DIGITAL_R1)==true)&&(shieldRaised==false)){
+			plowBackRight.set_value(true);
+			waitUntil(Master.get_digital(DIGITAL_R1)==false);
+			shieldRaised = true;
+		}
+		if((Master.get_digital(DIGITAL_R1)==true)&&(shieldRaised==true)){
+			plowBackRight.set_value(false);
+			waitUntil(Master.get_digital(DIGITAL_R1)==false);
+			shieldRaised = false;
+		}
 
 		pros::delay(20);
 	}
