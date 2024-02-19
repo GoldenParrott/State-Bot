@@ -62,6 +62,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+void PIDMove(int goalReading);
+void PIDTurn(int goalReading, int direction);
 void autonomous(void);
 void initialize(void);
 void disabled(void);

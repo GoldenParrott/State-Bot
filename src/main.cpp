@@ -1,5 +1,126 @@
 #include "main.h"
 #include "init.h"
+#include "pid.h"
+
+void PIDMove(
+	int goalReading // the distance to move (in cm)
+	)
+{
+	double wheelCircumference = 3.14 * 4; // 4 is the wheel diameter in inches
+	double gearRatio = 1.5;
+	double wheelRevolution = wheelCircumference * 2.54; // in cm
+	long double singleDegree = wheelRevolution / 360;
+
+	bool actionCompleted = false;
+	int power;
+
+	backRight.tare_position();
+	backLeft.tare_position();
+	frontRight.tare_position();
+	frontLeft.tare_position();
+
+	double br;
+	double bl;
+	double fr;
+	double fl;
+
+	double currentMotorReading = ((br + bl + fr + fl) / 4);
+	double currentWheelReading = currentMotorReading * gearRatio;
+
+	double currentDistanceMovedByWheel = 0;
+
+	double prevDistance = currentDistanceMovedByWheel;
+	double prevError = goalReading - prevDistance;
+
+	while (!actionCompleted) {
+
+		power = PID(currentDistanceMovedByWheel, goalReading, prevError, 1);
+
+		prevDistance = currentDistanceMovedByWheel;
+		prevError = goalReading - prevDistance;
+
+		allWheels.move(power);
+
+		pros::delay(15);
+
+		br = backRight.get_position();
+		bl = backLeft.get_position();
+		fr = frontRight.get_position();
+		fl = frontLeft.get_position();
+
+		currentMotorReading = ((br + bl + fr + fl) / 4); // degrees
+		currentWheelReading = currentMotorReading / gearRatio; // degrees = degrees * multiplier
+		currentDistanceMovedByWheel = currentWheelReading * singleDegree; // centimeters
+
+		if ((currentDistanceMovedByWheel == goalReading) || ((power <= 5) && (power >= -5))) {
+			actionCompleted = true;
+		}
+	}
+
+	Master.clear();
+	
+} 
+
+void PIDTurn(
+	int goalReading, // the inertial heading to turn to
+	int direction // 1 for left, 2 for right
+	)
+	// IF PID TURN PASSES 0 FROM ABOUT 180 DURING A TURN, THE NUMBER IT IS SET TO CAN BE NO LESS THAN 90
+{
+	bool actionCompleted = false;
+	int power;
+	int negativePower;
+
+	int currentInertialReading = Inertial.get_heading();
+
+	int prevReading = currentInertialReading;
+
+	double prevError = goalReading - prevReading;
+
+	Master.print(0, 0, "Inertial Heading: %d", Inertial.get_heading());
+	pros::delay(300);
+	Master.clear();
+
+	while (!actionCompleted) {
+
+		power = PID(currentInertialReading, goalReading, prevError, 2);
+
+		if (power > 0) {
+			power = power;
+			negativePower = power * -1;
+		}
+		else if (power < 0) {
+			negativePower = power;
+			power = power * -1;
+		}
+
+		prevReading = currentInertialReading;
+		prevError = goalReading - prevReading;
+
+		allWheels.move(power);
+		if (direction == 1) {
+			leftWheels.move(negativePower);
+			rightWheels.move(power);
+			Master.print(0, 0, "Left turn!");
+		}
+		else if (direction == 2) {
+			leftWheels.move(power);
+			rightWheels.move(negativePower);
+			Master.print(0, 0, "Right turn!");
+		}
+
+		pros::delay(15);
+
+		currentInertialReading = Inertial.get_heading();
+
+		if ((currentInertialReading == goalReading) || ((power <= 0.5) && (power >= -0.5))) {
+			actionCompleted = true;
+		}
+	}
+
+	Master.clear();
+	
+} 
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
