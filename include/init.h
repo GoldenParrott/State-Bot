@@ -24,18 +24,17 @@ pros::Motor_Group rightWheels({frontRight, middleRight, backRight});
 
 pros::Motor_Group allWheels({frontLeft, middleLeft, backLeft, frontRight, middleRight, backRight});
 
-
+//ABCDEFGH
+//12345678
 //Pnuematics
-pros::ADIDigitalOut plowFrontLeft(1);
-pros::ADIDigitalOut plowBackLeft(2);
-pros::ADIDigitalOut plowFrontRight(3);
-pros::ADIDigitalOut plowBackRight(4);
+pros::ADIDigitalOut plowFrontLeft(5);
+pros::ADIDigitalOut plowBackLeft(7);
+pros::ADIDigitalOut plowFrontRight(2);
+pros::ADIDigitalOut plowBackRight(3);
 
-pros::ADIDigitalOut Shield(5);
+pros::ADIDigitalOut Shield(1);
 
-pros::ADIDigitalIn ArmLimit(6);
-
-pros::Imu Inertial(18);
+pros::Imu Inertial(17);
 
 //Variables
 int drvtrDZ = 10;

@@ -148,19 +148,23 @@ void opcontrol() {
 			waitUntil(Master.get_digital(DIGITAL_R1)==false);
 			pbr = false;
 		}
-		
+	
 	  //Shield
-		if((Master.get_digital(DIGITAL_R1)==true)&&(shieldRaised==false)){
-			plowBackRight.set_value(true);
-			waitUntil(Master.get_digital(DIGITAL_R1)==false);
+		if((Master.get_digital(DIGITAL_B)==true)&&(shieldRaised==false)){
+			Shield.set_value(true);
+			waitUntil(Master.get_digital(DIGITAL_B)==false);
 			shieldRaised = true;
 		}
-		if((Master.get_digital(DIGITAL_R1)==true)&&(shieldRaised==true)){
-			plowBackRight.set_value(false);
-			waitUntil(Master.get_digital(DIGITAL_R1)==false);
+		if((Master.get_digital(DIGITAL_B)==true)&&(shieldRaised==true)){
+			Shield.set_value(false);
+			waitUntil(Master.get_digital(DIGITAL_B)==false);
 			shieldRaised = false;
 		}
 
+	  //
+	  	//if(){
+
+		//}
 		pros::delay(20);
 	}
 }
