@@ -29,8 +29,8 @@ int PID(
 	double kI;
 	double kD;
 	if (moveOrTurn == 1) {
-		kP = 2;
-		kI = 0.5;
+		kP = 1;
+		kI = 0.25;
 		kD = 0.25;
 	}
 	else if (moveOrTurn == 2) {

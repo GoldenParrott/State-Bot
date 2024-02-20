@@ -2,12 +2,27 @@
 #include "init.h"
 #include "pid.h"
 
+void allWheelsMoveSteady(int power) {
+	int heading = Inertial.get_heading();
+
+	if (Inertial.get_heading() > heading) {
+		leftWheels.move(power);
+		rightWheels.move(power * 0.9);
+	}
+	else if (Inertial.get_heading() < heading) {
+		leftWheels.move(power * 0.9);
+		rightWheels.move(power);
+	} else {
+		allWheels.move(power);
+	}
+}
+
 void PIDMove(
 	int goalReading // the distance to move (in cm)
 	)
 {
-	double wheelCircumference = 3.14 * 4; // 4 is the wheel diameter in inches
-	double gearRatio = 1.5;
+	double wheelCircumference = 3.14 * 2.75; // 4 is the wheel diameter in inches
+	double gearRatio = 1;
 	double wheelRevolution = wheelCircumference * 2.54; // in cm
 	long double singleDegree = wheelRevolution / 360;
 
@@ -39,7 +54,7 @@ void PIDMove(
 		prevDistance = currentDistanceMovedByWheel;
 		prevError = goalReading - prevDistance;
 
-		allWheels.move(power);
+		allWheelsMoveSteady(power);
 
 		pros::delay(15);
 
@@ -52,7 +67,10 @@ void PIDMove(
 		currentWheelReading = currentMotorReading / gearRatio; // degrees = degrees * multiplier
 		currentDistanceMovedByWheel = currentWheelReading * singleDegree; // centimeters
 
-		if ((currentDistanceMovedByWheel == goalReading) || ((power <= 5) && (power >= -5))) {
+		if ((currentDistanceMovedByWheel == goalReading) || 
+			((power <= 5) && (power >= -5)) ||
+			((currentDistanceMovedByWheel <= (goalReading + 10)) && (currentDistanceMovedByWheel >= (goalReading - 10)))) {
+
 			actionCompleted = true;
 		}
 	}
@@ -97,7 +115,6 @@ void PIDTurn(
 		prevReading = currentInertialReading;
 		prevError = goalReading - prevReading;
 
-		allWheels.move(power);
 		if (direction == 1) {
 			leftWheels.move(negativePower);
 			rightWheels.move(power);
@@ -147,7 +164,9 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+	Shield.set_value(false);
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -171,7 +190,15 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	allWheels.set_brake_modes(MOTOR_BRAKE_HOLD);
+	Intake.move(-128);
+	PIDMove(110);
+	Master.print(0, 0, "Motion completed successfully.");
+	PIDMove(-120);
+	Intake.brake();
+	PIDTurn(110, 2);
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
