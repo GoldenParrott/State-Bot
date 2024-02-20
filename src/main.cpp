@@ -197,7 +197,9 @@ void autonomous() {
 	Master.print(0, 0, "Motion completed successfully.");
 	PIDMove(-120);
 	Intake.brake();
-	PIDTurn(110, 2);
+	PIDTurn(105, 2);
+	PIDMove(-15);
+
 }
 
 /**
