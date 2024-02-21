@@ -225,8 +225,8 @@ void opcontrol() {
 
 		if((abs(drvtrFB) > drvtrDZ) || (abs(drvtrLR) > drvtrDZ)) {
       		// ^^ Checks to see if either joystick has moved out of the deadzone
-      		rightWheels.move((drvtrFB-drvtrLR));
-      		leftWheels.move((drvtrFB+drvtrLR));
+      		rightWheels.move((drvtrFB-(drvtrLR*0.8)));
+      		leftWheels.move((drvtrFB+(drvtrLR*0.8)));
     	} else {
       		rightWheels.brake();
       		leftWheels.brake();
