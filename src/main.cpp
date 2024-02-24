@@ -18,9 +18,11 @@ void allWheelsMoveSteady(int power) {
 }
 
 void PIDMove(
-	int goalReading // the distance to move (in cm)
+	int goalReading // the distance to move (in inches)
 	)
 {
+	goalReading = goalReading * 2.54; // converts from inches to cm
+
 	double wheelCircumference = 3.14 * 2.75; // 4 is the wheel diameter in inches
 	double gearRatio = 1;
 	double wheelRevolution = wheelCircumference * 2.54; // in cm
@@ -95,6 +97,10 @@ void PIDTurn(
 
 	double prevError = goalReading - prevReading;
 
+	bool isPositive;
+	if (direction == 1) {isPositive = false;}
+	else {isPositive = true;}
+
 	Master.print(0, 0, "Inertial Heading: %d", Inertial.get_heading());
 	pros::delay(300);
 	Master.clear();
@@ -103,6 +109,17 @@ void PIDTurn(
 
 		power = PID(currentInertialReading, goalReading, prevError, 2);
 
+		if (((currentInertialReading > goalReading) && (isPositive)) ||
+			((currentInertialReading < goalReading) && (!isPositive))) {
+			if (power > 0) {
+				power = power;
+				negativePower = power * -1;
+			}
+			else if (power < 0) {
+				negativePower = power;
+				power = power * -1;
+			}
+		}
 		if (power > 0) {
 			power = power;
 			negativePower = power * -1;
@@ -157,6 +174,9 @@ void initialize() {
 	pros::lcd::set_text(7, "RICO HAS RETURNED!");
 	pros::lcd::set_text(8, "RICO HAS RETURNED!");
 	pros::lcd::set_text(9, "RICO HAS RETURNED!");
+
+	Shield.set_value(true);
+	Inertial.tare_heading();
 }
 
 /**
@@ -165,7 +185,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-	Shield.set_value(false);
+	Shield.set_value(true);
 }
 
 /**
@@ -191,15 +211,26 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	allWheels.set_brake_modes(MOTOR_BRAKE_HOLD);
-	Intake.move(-128);
-	PIDMove(110);
-	Master.print(0, 0, "Motion completed successfully.");
-	PIDMove(-120);
-	Intake.brake();
-	PIDTurn(105, 2);
-	PIDMove(-15);
+	Shield.set_value(true);
+	autonnumber = 100;
+	if (autonnumber == 3) {
+		// Autonomous Skills
 
+		// Score preloads in goal
+		leftWheels.move(-110);
+		rightWheels.move(-128);
+		pros::delay(1500);
+		allWheels.brake();
+
+		// Turn 10 degrees left
+		PIDMove(10);
+
+	}
+	else if (autonnumber == 100) {
+		PIDMove(10);
+		PIDTurn(180, 2);
+		PIDMove(10000);
+	}
 }
 
 /**

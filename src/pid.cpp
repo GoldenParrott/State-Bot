@@ -29,14 +29,14 @@ int PID(
 	double kI;
 	double kD;
 	if (moveOrTurn == 1) {
-		kP = 1;
-		kI = 0.25;
+		kP = 1.25;
+		kI = 0.5;
 		kD = 0.25;
 	}
 	else if (moveOrTurn == 2) {
-		kP = 0.75;
-		kI = 0.25;
-		kD = 0.1;
+		kP = 0.9;
+		kI = 0.4;
+		kD = 0.45;
 	}
 
 
