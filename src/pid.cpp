@@ -1,16 +1,15 @@
-#include "main.h"
-#include "pid.h"
-
-int PID(
-		int currentReading, // the current sensor reading
-		int setPoint, // the goal sensor reading
-		int prevError, // the error from the previous cycle
-		int moveOrTurn // 1 for moving forward/backward, 2 for turning
+// #include "init.h"
+// #include "pid.h"
+/*
+int PIDMover(
+		int setPoint // how far you want to move in inches
 		)
 {
+// PID CALCULATION VARIABLES
 // General Variables
 	int error;
 	int power;
+	bool actionCompleted = false;
 
 // Proportional Variables
 	int proportionalOut;
@@ -23,39 +22,58 @@ int PID(
 // Derivative Variables
     int derivative;
     int derivativeOut;
+	int prevError = error;
 
 // Constants -- tuning depends on whether the robot is moving or turning
-	double kP;
-	double kI;
-	double kD;
-	if (moveOrTurn == 1) {
-		kP = 1.25;
-		kI = 0.5;
-		kD = 0.25;
-	}
-	else if (moveOrTurn == 2) {
-		kP = 0.9;
-		kI = 0.4;
-		kD = 0.45;
-	}
+	double kP = 1;
+	double kI = 0.5;
+	double kD = 0.5;
 
+// Checks if the movement is positive or negative
+	bool isPositive = (setPoint - setPoint) > 0;
 
-	// gets the robot's initial reading on the sensor to detect whether it is positive or negative
-	bool isPositive;
-	if (currentReading > 0) {
-		isPositive = true;
-	} else if (currentReading < 0) {
-		isPositive = false;
-	}
-	// P: Proportional -- slows down as we reach our target for more accuracy
+// PID LOOPING VARIABLES
+	setPoint = setPoint * 2.54; // converts from inches to cm
+
+	double wheelCircumference = 3.14 * 2.75; // 4 is the wheel diameter in inches
+	double gearRatio = 1;
+	double wheelRevolution = wheelCircumference * 2.54; // in cm
+	long double singleDegree = wheelRevolution / 360;
+
+	bool actionCompleted = false;
+	int power;
+
+	backRight.tare_position();
+	backLeft.tare_position();
+	frontRight.tare_position();
+	frontLeft.tare_position();
+
+	double br;
+	double bl;
+	double fr;
+	double fl;
+
+	double currentMotorReading = ((br + bl + fr + fl) / 4);
+	double currentWheelReading = currentMotorReading * gearRatio;
+
+	double currentDistanceMovedByWheel = 0;
+
+	double prevDistance = currentDistanceMovedByWheel;
+	double prevError = setPoint - prevDistance;
+
+	while (!actionCompleted) {
+	// PID CALCULATION CODE
+		// P: Proportional -- slows down as we reach our target for more accuracy
 	
 		// error = goal reading - current reading
-		error = setPoint - currentReading;
+		error = setPoint - currentDistanceMovedByWheel;
 		// kP (proportional constant) determines how fast we want to go overall while still keeping accuracy
-		proportionalOut = (error * kP);
+		proportionalOut = error * kP;
 
 
-	// I: Integral -- starts slow and speeds up as time goes on to prevent undershooting
+
+
+		// I: Integral -- starts slow and speeds up as time goes on to prevent undershooting
 
 		// starts the integral at the error, then compounds it with the new current error every loop
 		integral = integral + error;
@@ -73,20 +91,47 @@ int PID(
 		integralOut = integral * kI;
 
 
-	// D: Derivative -- slows the robot more and more as it goes faster
+
+		// D: Derivative -- slows the robot more and more as it goes faster
 
         // starts the derivative by making it the rate of change from the previous cycle to this one
 		// the error from the previous cycle should be taken as a parameter
         derivative = error - prevError;
+		// sets the previous error to the previous error for use in the next cycle
+		prevError = error;
 
         // kD (derivative constant) prevents derivative from over- or under-scaling
         derivativeOut = derivative * kD;
 
+		power = proportionalOut + integralOut + derivativeOut;
 
-    // Output Power -- the actual output power
 
-        power = proportionalOut + integralOut + derivativeOut;
-    
-    // the movement itself
-        return power;
+
+
+
+	// PID LOOPING CODE
+
+		prevDistance = currentDistanceMovedByWheel;
+		prevError = setPoint - prevDistance;
+
+		allWheelsMoveSteady(power);
+
+		pros::delay(15);
+
+		br = backRight.get_position();
+		bl = backLeft.get_position();
+		fr = frontRight.get_position();
+		fl = frontLeft.get_position();
+
+		currentMotorReading = ((br + bl + fr + fl) / 4); // degrees
+		currentWheelReading = currentMotorReading / gearRatio; // degrees = degrees * multiplier
+		currentDistanceMovedByWheel = currentWheelReading * singleDegree; // centimeters
+
+		if ((currentDistanceMovedByWheel == setPoint) || 
+			((power <= 10) && (power >= -10)) ||
+			((currentDistanceMovedByWheel <= (setPoint + 10)) && (currentDistanceMovedByWheel >= (setPoint - 10)))) {
+				actionCompleted = true;
+		}
+	}
 }
+*/

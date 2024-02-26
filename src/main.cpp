@@ -7,29 +7,54 @@ void allWheelsMoveSteady(int power) {
 
 	if (Inertial.get_heading() > heading) {
 		leftWheels.move(power);
-		rightWheels.move(power * 0.9);
+		rightWheels.move(power * 0.95);
 	}
 	else if (Inertial.get_heading() < heading) {
-		leftWheels.move(power * 0.9);
+		leftWheels.move(power * 0.95);
 		rightWheels.move(power);
 	} else {
 		allWheels.move(power);
 	}
 }
 
-void PIDMove(
-	int goalReading // the distance to move (in inches)
-	)
+void PIDMover(
+		int setPoint // how far you want to move in inches
+		)
 {
-	goalReading = goalReading * 2.54; // converts from inches to cm
+// PID CALCULATION VARIABLES
+// General Variables
+	int error;
+	int power;
+	bool actionCompleted = false;
+
+// Proportional Variables
+	int proportionalOut;
+
+// Integral Variables
+	int integral;
+	int integralLimiter;
+	int integralOut;
+
+// Derivative Variables
+    int derivative;
+    int derivativeOut;
+	int prevError = error;
+
+// Constants -- tuning depends on whether the robot is moving or turning
+	double kP = 0.75;
+	double kI = 0.5;
+	double kD = 0.5;
+
+// Checks if the movement is positive or negative
+	bool isPositive = (setPoint - setPoint) > 0;
+
+// PID LOOPING VARIABLES
+	setPoint = setPoint * 2.54; // converts from inches to cm
 
 	double wheelCircumference = 3.14 * 2.75; // 4 is the wheel diameter in inches
 	double gearRatio = 1;
 	double wheelRevolution = wheelCircumference * 2.54; // in cm
 	long double singleDegree = wheelRevolution / 360;
-
-	bool actionCompleted = false;
-	int power;
 
 	backRight.tare_position();
 	backLeft.tare_position();
@@ -46,15 +71,58 @@ void PIDMove(
 
 	double currentDistanceMovedByWheel = 0;
 
-	double prevDistance = currentDistanceMovedByWheel;
-	double prevError = goalReading - prevDistance;
+	prevError = (int) (setPoint - currentDistanceMovedByWheel);
+
+	int timeout = 0;
 
 	while (!actionCompleted) {
+	// PID CALCULATION CODE
+		
+	// P: Proportional -- slows down as we reach our target for more accuracy
+	
+		// error = goal reading - current reading
+		error = int (setPoint - currentDistanceMovedByWheel);
+		// kP (proportional constant) determines how fast we want to go overall while still keeping accuracy
+		proportionalOut = error * kP;
 
-		power = PID(currentDistanceMovedByWheel, goalReading, prevError, 1);
 
-		prevDistance = currentDistanceMovedByWheel;
-		prevError = goalReading - prevDistance;
+
+
+	// I: Integral -- starts slow and speeds up as time goes on to prevent undershooting
+
+		// starts the integral at the error, then compounds it with the new current error every loop
+		integral = int (integral + error);
+		// prevents the integral variable from causing the robot to overshoot
+		if ((isPositive && (error <= 0)) || (!isPositive && (error >= 0))) {
+			integral = 0;
+		}
+		// prevents the integral from winding up too much, causing the number to be beyond the control of
+        // even kI
+		// if we want to make this better, see Solution #3 for 3.3.2 in the packet
+		if (error >= integralLimiter) {
+            integral = 0;
+        }
+		// kI (integral constant) brings integral down to a reasonable/useful output number
+		integralOut = integral * kI;
+
+
+
+	// D: Derivative -- slows the robot more and more as it goes faster
+
+        // starts the derivative by making it the rate of change from the previous cycle to this one
+		// the error from the previous cycle should be taken as a parameter
+        derivative = int (error - prevError);
+		// sets the previous error to the previous error for use in the next cycle
+		prevError = error;
+
+        // kD (derivative constant) prevents derivative from over- or under-scaling
+        derivativeOut = derivative * kD;
+
+		power = proportionalOut + integralOut + derivativeOut;
+
+
+
+	// PID LOOPING CODE
 
 		allWheelsMoveSteady(power);
 
@@ -69,92 +137,210 @@ void PIDMove(
 		currentWheelReading = currentMotorReading / gearRatio; // degrees = degrees * multiplier
 		currentDistanceMovedByWheel = currentWheelReading * singleDegree; // centimeters
 
-		if ((currentDistanceMovedByWheel == goalReading) || 
-			((power <= 5) && (power >= -5)) ||
-			((currentDistanceMovedByWheel <= (goalReading + 10)) && (currentDistanceMovedByWheel >= (goalReading - 10)))) {
-
-			actionCompleted = true;
+		if ((currentDistanceMovedByWheel == setPoint) || 
+			((power <= 10) && (power >= -10)) ||
+			((currentDistanceMovedByWheel <= (setPoint + 10)) && (currentDistanceMovedByWheel >= (setPoint - 10)))) {
+				actionCompleted = true;
+				allWheels.brake();
 		}
 	}
+}
 
-	Master.clear();
-	
-} 
-
-void PIDTurn(
-	int goalReading, // the inertial heading to turn to
-	int direction // 1 for left, 2 for right
-	)
-	// IF PID TURN PASSES 0 FROM ABOUT 180 DURING A TURN, THE NUMBER IT IS SET TO CAN BE NO LESS THAN 90
+void PIDTurner(
+		int setPoint, // how far you want to move in inches
+		int direction // 1 for left and 2 for right
+		)
 {
-	bool actionCompleted = false;
+// PID CALCULATION VARIABLES
+// General Variables
+	int error;
 	int power;
+	bool actionCompleted = false;
+
+// Proportional Variables
+	int proportionalOut;
+
+// Integral Variables
+	int integral;
+	int integralLimiter;
+	int integralOut;
+
+// Derivative Variables
+    int derivative;
+    int derivativeOut;
+	int prevError = error;
+
+// Constants -- tuning depends on whether the robot is moving or turning
+	double kP = 1;
+	double kI = 0;
+	double kD = 0;
+
+// Checks if the movement is positive or negative
+	bool isPositive = (setPoint - setPoint) > 0;
+
+// PID LOOPING VARIABLES
 	int negativePower;
 
-	int currentInertialReading = Inertial.get_heading();
+	int inertialReadingInit = Inertial.get_heading();
+	int distanceToMove;
 
-	int prevReading = currentInertialReading;
+	if (direction == 1) {
+		// standard left turn is negative, so the calculation makes it positive if it is a normal turn
+		// ex: current = 90, goal = 45 -> -45 degree turn -> positive 45 degree turn by calculation
+		// 90 - 45 = 45 degree turn left
+		distanceToMove = inertialReadingInit - setPoint;
+	}
+	else if (direction == 2) {
+		// standard right turn is positive, so the calculation keeps it positive if it is a normal turn
+		// ex: current = 45, goal = 90 -> 45 degree turn -> positive 45 degree turn by calculation
+		// 90 - 45 = 45 degree turn right
+		distanceToMove = setPoint - inertialReadingInit;
+	}
 
-	double prevError = goalReading - prevReading;
+	// if the error is positive, then the calculation is fine and is left
+	if (distanceToMove >= 0) {
+		// do nothing
+	}
+	// otherwise, the turn takes the "long way" around the circle, and the calculation has provided the
+	// value of the negative short way - adding 360 to this value gives the long way around the circle,
+	// which is what is needed
+	// ex: current = 90, goal = 45, direction = right -> calculated -45 degree turn -> + 360 -> 315 (length of long way)
+	// 45 - 90 = -45 (short way, negative) + 360 = 315 (long way, positive)
+	else {
+		distanceToMove += 360;
+	}
+	// the calculation has now yielded a positive value that is the error needed of our turn in the proper
+	// direction, making it similar to how a forward/backward movement is coded
 
-	bool isPositive;
-	if (direction == 1) {isPositive = false;}
-	else {isPositive = true;}
+	// finally, the code sets a new value that will be set to the distance moved to zero to finalize this similarity
+	// distanceToMove is analogous to setPoint on PIDMover, and changeInReading is analogous to currentDistanceMovedByWheel
+	int changeInReading = 0;
 
-	Master.print(0, 0, "Inertial Heading: %d", Inertial.get_heading());
-	pros::delay(300);
-	Master.clear();
+	prevError = (int) (distanceToMove - changeInReading);
+
+	Master.print(0, 0, "DTM: %d", distanceToMove);
+
+	int timeout = 0;
 
 	while (!actionCompleted) {
+	// PID CALCULATION CODE
+		
+	// P: Proportional -- slows down as we reach our target for more accuracy
+	
+		// error = goal reading - current reading
+		error = distanceToMove - changeInReading;
+		// kP (proportional constant) determines how fast we want to go overall while still keeping accuracy
+		proportionalOut = error * kP;
 
-		power = PID(currentInertialReading, goalReading, prevError, 2);
 
-		if (((currentInertialReading > goalReading) && (isPositive)) ||
-			((currentInertialReading < goalReading) && (!isPositive))) {
-			if (power > 0) {
-				power = power;
-				negativePower = power * -1;
-			}
-			else if (power < 0) {
-				negativePower = power;
-				power = power * -1;
-			}
+
+
+	// I: Integral -- starts slow and speeds up as time goes on to prevent undershooting
+
+		// starts the integral at the error, then compounds it with the new current error every loop
+		integral = int (integral + error);
+		// prevents the integral variable from causing the robot to overshoot
+		if ((isPositive && (error <= 0)) || (!isPositive && (error >= 0))) {
+			integral = 0;
 		}
-		if (power > 0) {
-			power = power;
-			negativePower = power * -1;
-		}
-		else if (power < 0) {
-			negativePower = power;
-			power = power * -1;
-		}
+		// prevents the integral from winding up too much, causing the number to be beyond the control of
+        // even kI
+		// if we want to make this better, see Solution #3 for 3.3.2 in the packet
+		if (error >= integralLimiter) {
+            integral = 0;
+        }
+		// kI (integral constant) brings integral down to a reasonable/useful output number
+		integralOut = integral * kI;
 
-		prevReading = currentInertialReading;
-		prevError = goalReading - prevReading;
 
+
+	// D: Derivative -- slows the robot more and more as it goes faster
+
+        // starts the derivative by making it the rate of change from the previous cycle to this one
+		// the error from the previous cycle should be taken as a parameter
+        derivative = int (error - prevError);
+		// sets the previous error to the previous error for use in the next cycle
+		prevError = error;
+
+        // kD (derivative constant) prevents derivative from over- or under-scaling
+        derivativeOut = derivative * kD;
+
+		power = proportionalOut + integralOut + derivativeOut;
+
+
+
+	// PID LOOPING CODE
+
+		negativePower = power * -1;
+
+		// the power will never be negative and invert the turns because distanceToMove is always positive
 		if (direction == 1) {
 			leftWheels.move(negativePower);
 			rightWheels.move(power);
-			Master.print(0, 0, "Left turn!");
 		}
 		else if (direction == 2) {
 			leftWheels.move(power);
 			rightWheels.move(negativePower);
-			Master.print(0, 0, "Right turn!");
 		}
 
 		pros::delay(15);
 
-		currentInertialReading = Inertial.get_heading();
+		// the change in reading is set to the absolute value of the change in reading due to everything being positive
+		int changeInDistance = direction == 1 
+			? inertialReadingInit - Inertial.get_heading() 
+			: Inertial.get_heading() - inertialReadingInit;
+		changeInReading = changeInDistance < 0
+		    ? changeInDistance + 360
+			: changeInDistance;
 
-		if ((currentInertialReading == goalReading) || ((power <= 0.5) && (power >= -0.5))) {
-			actionCompleted = true;
+		// int exampleVar = Inertial.get_heading() - inertialReadingInit;
+		// changeInReading = std::abs(Inertial.get_heading() - inertialReadingInit);
+
+		if ((changeInReading >= distanceToMove) || 
+			((power <= 10) && (power >= -10)) ||
+			((changeInReading <= (distanceToMove + 10)) && (changeInReading >= (distanceToMove - 10)))) {
+				actionCompleted = true;
+				allWheels.brake();
 		}
 	}
+}
 
-	Master.clear();
-	
-} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -216,20 +402,30 @@ void autonomous() {
 	if (autonnumber == 3) {
 		// Autonomous Skills
 
-		// Score preloads in goal
-		leftWheels.move(-110);
-		rightWheels.move(-128);
-		pros::delay(1500);
+		allWheels.set_brake_modes(MOTOR_BRAKE_BRAKE);
+		
+		// Line up with MLZ bar
+		allWheels.move(-64);
+		waitUntil((Inertial.get_heading() < 350) && (Inertial.get_heading() > 340));
 		allWheels.brake();
 
-		// Turn 10 degrees left
-		PIDMove(10);
+		// Shooting triballs
+		plowBackRight.set_value(true);
+		Indexer.move(-128);
+		pros::delay(1000);
+		Indexer.brake();
+		plowBackRight.set_value(false);
 
+		// Turning and moving down the straightaway
+		leftWheels.move(64);
+		rightWheels.move(-64);
+		waitUntil((Inertial.get_heading() > 350) && (Inertial.get_heading() <= 359));
+		allWheels.brake();
+		PIDMover(85);
 	}
 	else if (autonnumber == 100) {
-		PIDMove(10);
-		PIDTurn(180, 2);
-		PIDMove(10000);
+		PIDMover(10);
+		Intake.move(128);
 	}
 }
 
