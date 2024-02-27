@@ -41,9 +41,9 @@ void PIDMover(
 	int prevError = error;
 
 // Constants -- tuning depends on whether the robot is moving or turning
-	double kP = 0.75;
-	double kI = 0.5;
-	double kD = 0.5;
+	double kP = 0.9;
+	double kI = 0;
+	double kD = 0.3;
 
 // Checks if the movement is positive or negative
 	bool isPositive = (setPoint - setPoint) > 0;
@@ -137,9 +137,9 @@ void PIDMover(
 		currentWheelReading = currentMotorReading / gearRatio; // degrees = degrees * multiplier
 		currentDistanceMovedByWheel = currentWheelReading * singleDegree; // centimeters
 
-		if ((currentDistanceMovedByWheel == setPoint) || 
+		if ((currentDistanceMovedByWheel >= setPoint) || 
 			((power <= 10) && (power >= -10)) ||
-			((currentDistanceMovedByWheel <= (setPoint + 10)) && (currentDistanceMovedByWheel >= (setPoint - 10)))) {
+			((currentDistanceMovedByWheel >= (setPoint - 20)))) {
 				actionCompleted = true;
 				allWheels.brake();
 		}
@@ -171,9 +171,9 @@ void PIDTurner(
 	int prevError = error;
 
 // Constants -- tuning depends on whether the robot is moving or turning
-	double kP = 1;
+	double kP = 0.9;
 	double kI = 0;
-	double kD = 0;
+	double kD = 0.3;
 
 // Checks if the movement is positive or negative
 	bool isPositive = (setPoint - setPoint) > 0;
@@ -406,7 +406,7 @@ void autonomous() {
 		
 		// Line up with MLZ bar
 		allWheels.move(-64);
-		waitUntil((Inertial.get_heading() < 350) && (Inertial.get_heading() > 340));
+		waitUntil((Inertial.get_heading() > 333) && (Inertial.get_heading() < 343));
 		allWheels.brake();
 
 		// Shooting triballs
@@ -419,14 +419,87 @@ void autonomous() {
 		// Turning and moving down the straightaway
 		leftWheels.move(64);
 		rightWheels.move(-64);
-		waitUntil((Inertial.get_heading() > 350) && (Inertial.get_heading() <= 359));
+		waitUntil((Inertial.get_heading() > 355) || (Inertial.get_heading() < 5));
 		allWheels.brake();
 		PIDMover(85);
+		Master.print(0, 0, "QK");
+
+		// Ram into goal, back up, ram into goal again, then back up again
+		// rSide full, lSide 90% for 2 seconds
+		// back up for 1/2 second
+		// drive forward 1 second
+		// back up WITH PID 
+		leftWheels.move(0);
+		rightWheels.move(128);
+		waitUntil((Inertial.get_heading() > 328) && (Inertial.get_heading() < 338));
+
+		leftWheels.move(128);
+		rightWheels.move(128);
+		pros::delay(750);
+		allWheels.brake();
+
+		leftWheels.move(-128);
+		rightWheels.move(-128);
+		pros::delay(250);
+		allWheels.brake();
+		
+		leftWheels.move(128);
+		rightWheels.move(128);
+		pros::delay(750);
+		allWheels.brake();
+		
+		leftWheels.move(-128);
+		rightWheels.move(-128);
+		pros::delay(300);
+		allWheels.brake();
+
+		leftWheels.move(-64);
+		rightWheels.move(-32);
+		waitUntil((Inertial.get_heading() > 235) && (Inertial.get_heading() < 245));
+		allWheels.brake();
+
+		//PIDTurner(210, 1);
+		pros::delay(500);
+/**/
+		// Turn to center of field, then move there
+		//PIDTurner(195, 1);
+		
+		leftWheels.move(-64);
+		rightWheels.move(64);
+		waitUntil((Inertial.get_heading() > 215) && (Inertial.get_heading() < 225));
+		allWheels.brake();
+		
+		PIDMover(45);
+/*
+		// Turn to face goal and move there
+		PIDTurner(anotherValue);
+		PIDMover(45);
+
+		// Move back
+		PIDMover(-90);
+
+		// Turn 90 degrees and move to the other side of the field there
+		PIDTurner(ninetyOut);
+		PIDMover(35);
+
+		// Turn toward goal and move there
+		PIDTurner(anotherAnotherValue);
+		PIDMover(50);
+
+		// Move back, turn toward other MLZ bar, and move there
+		PIDMover(-45);
+		PIDTurner(valU);
+		PIDMover(50);
+		
+		// Turn toward other side of goal and move there
+		PIDTurner(valueBillion);
+		PIDMover(40);
+
+		// End of routine
+	*/
 	}
-	else if (autonnumber == 100) {
-		PIDMover(10);
-		Intake.move(128);
-	}
+	PIDTurner(90, 2);
+	Intake.move(128);
 }
 
 /**
