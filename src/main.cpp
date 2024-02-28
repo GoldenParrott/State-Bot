@@ -43,10 +43,10 @@ void PIDMover(
 // Constants -- tuning depends on whether the robot is moving or turning
 	double kP = 0.9;
 	double kI = 0;
-	double kD = 0.3;
+	double kD = 0.25;
 
 // Checks if the movement is positive or negative
-	bool isPositive = (setPoint - setPoint) > 0;
+	bool isPositive = setPoint > 0;
 
 // PID LOOPING VARIABLES
 	setPoint = setPoint * 2.54; // converts from inches to cm
@@ -68,6 +68,8 @@ void PIDMover(
 
 	double currentMotorReading = ((br + bl + fr + fl) / 4);
 	double currentWheelReading = currentMotorReading * gearRatio;
+
+	Master.print(0, 0, "CMR: %f", currentMotorReading);
 
 	double currentDistanceMovedByWheel = 0;
 
@@ -137,9 +139,9 @@ void PIDMover(
 		currentWheelReading = currentMotorReading / gearRatio; // degrees = degrees * multiplier
 		currentDistanceMovedByWheel = currentWheelReading * singleDegree; // centimeters
 
-		if ((currentDistanceMovedByWheel >= setPoint) || 
+		if ((((currentDistanceMovedByWheel >= setPoint) && (setPoint > 0)) || ((currentDistanceMovedByWheel <= setPoint) && (setPoint < 0))) || 
 			((power <= 10) && (power >= -10)) ||
-			((currentDistanceMovedByWheel >= (setPoint - 20)))) {
+			(((currentDistanceMovedByWheel >= (setPoint - 20)) && (setPoint > 0)) || ((currentDistanceMovedByWheel <= (setPoint + 20)) && (setPoint < 0)))) {
 				actionCompleted = true;
 				allWheels.brake();
 		}
@@ -361,7 +363,6 @@ void initialize() {
 	pros::lcd::set_text(8, "RICO HAS RETURNED!");
 	pros::lcd::set_text(9, "RICO HAS RETURNED!");
 
-	Shield.set_value(true);
 	Inertial.tare_heading();
 }
 
@@ -371,7 +372,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-	Shield.set_value(true);
+	Shield.set_value(false);
 }
 
 /**
@@ -397,9 +398,84 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	Shield.set_value(true);
-	autonnumber = 100;
-	if (autonnumber == 3) {
+	Shield.set_value(false);
+	autonnumber = 1;
+	if (autonnumber == 1) {
+		// Near Autonomous
+
+		// Move to center of field, intake Triball, and move back most of the way
+		Intake.move(-128);
+		PIDMover(47);
+		pros::delay(500);
+
+		PIDMover(-35);
+
+		Intake.brake();
+
+		// Move to the MLZ bar
+		leftWheels.move(64);
+		rightWheels.move(-64);
+		waitUntil((Inertial.get_heading() > 5) && (Inertial.get_heading() < 15));
+		allWheels.brake();
+		PIDMover(-26);
+
+		// Angle with the MLZ bar and scoop the Triball out
+		PIDTurner(130, 2);
+		plowBackRight.set_value(true);
+		pros::delay(200);
+
+		// Move down the straightaway, bringing all Triballs with us
+		leftWheels.move(-64);
+		rightWheels.move(64);
+		waitUntil((Inertial.get_heading() > 35) && (Inertial.get_heading() < 45));
+		allWheels.brake();
+		pros::delay(1000);
+		PIDTurner(95, 2);
+
+
+		plowBackRight.set_value(false);
+		plowFrontRight.set_value(true);
+		Intake.move(128);
+		pros::delay(200);
+		PIDMover(42);
+		Intake.brake();
+
+		PIDMover(-1.5);
+	}
+	else if (autonnumber == 2) {
+		// Far Autonomous
+
+		// Bringing down the intake
+		allWheels.move(-128);
+		pros::delay(100);
+		allWheels.move(128);
+		pros::delay(100);
+		allWheels.brake();
+
+		// Intake the Triball in front of the robot and move back
+		Intake.move(-128);
+		// PIDMove(-something);
+
+		// Turn and scoop the Triball in the MLZ, then turn toward the goal
+		// PIDTurn();
+		// extend
+		// PIDMove(-);
+		// PIDTurn();
+
+
+		// Move to goal
+		// PIDMove(-);
+		// retract
+		// PIDTurn(180);
+		// PIDMove(-);
+	}
+	else if (autonnumber == 4) {
+		// Loser Far Autonomous
+		allWheels.move(128);
+		pros::delay(1000);
+		allWheels.brake();
+	}
+	else if (autonnumber == 3) {
 		// Autonomous Skills
 
 		allWheels.set_brake_modes(MOTOR_BRAKE_BRAKE);
@@ -460,7 +536,6 @@ void autonomous() {
 
 		//PIDTurner(210, 1);
 		pros::delay(500);
-/**/
 		// Turn to center of field, then move there
 		//PIDTurner(195, 1);
 		
@@ -470,7 +545,7 @@ void autonomous() {
 		allWheels.brake();
 		
 		PIDMover(45);
-/*
+		/*
 		// Turn to face goal and move there
 		PIDTurner(anotherValue);
 		PIDMover(45);
@@ -498,8 +573,6 @@ void autonomous() {
 		// End of routine
 	*/
 	}
-	PIDTurner(90, 2);
-	Intake.move(128);
 }
 
 /**
