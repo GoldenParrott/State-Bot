@@ -399,7 +399,7 @@ void competition_initialize() {}
  */
 void autonomous() {
 	Shield.set_value(false);
-	autonnumber = 1;
+	autonnumber = 3;
 	if (autonnumber == 1) {
 		// Near Autonomous
 
@@ -495,8 +495,9 @@ void autonomous() {
 		// Turning and moving down the straightaway
 		leftWheels.move(64);
 		rightWheels.move(-64);
-		waitUntil((Inertial.get_heading() > 355) || (Inertial.get_heading() < 5));
+		waitUntil((Inertial.get_heading() > 350) || (Inertial.get_heading() < 5));
 		allWheels.brake();
+		Intake.move(128);
 		PIDMover(85);
 		Master.print(0, 0, "QK");
 
@@ -505,10 +506,26 @@ void autonomous() {
 		// back up for 1/2 second
 		// drive forward 1 second
 		// back up WITH PID 
-		leftWheels.move(0);
+		leftWheels.move(-64);
+		rightWheels.move(32);
+		waitUntil((Inertial.get_heading() > 325) && (Inertial.get_heading() < 350));
+		plowFrontLeft.set_value(true);
+		allWheels.brake();
+		pros::delay(200);
+		leftWheels.move(80);
 		rightWheels.move(128);
-		waitUntil((Inertial.get_heading() > 328) && (Inertial.get_heading() < 338));
 
+	  //Checks to see if we have moved into the wall or not
+		while (!(Inertial.get_heading() > 270) && (Inertial.get_heading() < 280))
+		{
+			if((Inertial.get_heading() > 355) || (Inertial.get_heading() < 5)){
+				leftWheels.move(-64);
+				rightWheels.move(64);
+				waitUntil((Inertial.get_heading() > 270) && (Inertial.get_heading() < 280))
+				allWheels.brake();
+			}
+		}
+		
 		leftWheels.move(128);
 		rightWheels.move(128);
 		pros::delay(750);
@@ -516,7 +533,7 @@ void autonomous() {
 
 		leftWheels.move(-128);
 		rightWheels.move(-128);
-		pros::delay(250);
+		pros::delay(500);
 		allWheels.brake();
 		
 		leftWheels.move(128);
@@ -531,6 +548,7 @@ void autonomous() {
 
 		leftWheels.move(-64);
 		rightWheels.move(-32);
+		plowFrontLeft.set_value(false);
 		waitUntil((Inertial.get_heading() > 235) && (Inertial.get_heading() < 245));
 		allWheels.brake();
 
@@ -543,24 +561,46 @@ void autonomous() {
 		rightWheels.move(64);
 		waitUntil((Inertial.get_heading() > 215) && (Inertial.get_heading() < 225));
 		allWheels.brake();
-		
-		PIDMover(45);
-		/*
+		pros::delay(200);
+
+		PIDMover(48);
+
+
 		// Turn to face goal and move there
-		PIDTurner(anotherValue);
-		PIDMover(45);
+		//PIDTurner(anotherValue);
+		leftWheels.move(64);
+		rightWheels.move(-64);
+		waitUntil((Inertial.get_heading() > 50) && (Inertial.get_heading() < 70));
+		leftWheels.move(32);
+		rightWheels.move(-32);
+		waitUntil((Inertial.get_heading() > 140) && (Inertial.get_heading() < 160));
+		plowBackLeft.set_value(true);
+		plowBackRight.set_value(true);
+		allWheels.brake();
+		pros::delay(250);
+
+
+		allWheels.move(-128);
+		pros::delay(750);
 
 		// Move back
-		PIDMover(-90);
+		PIDMover(33);
 
 		// Turn 90 degrees and move to the other side of the field there
-		PIDTurner(ninetyOut);
-		PIDMover(35);
+		leftWheels.move(64);
+		rightWheels.move(-64);
+		waitUntil((Inertial.get_heading() > 260) && (Inertial.get_heading() < 275));
+		allWheels.brake();
+		pros::delay(100);
+		PIDMover(16);
 
 		// Turn toward goal and move there
-		PIDTurner(anotherAnotherValue);
-		PIDMover(50);
-
+		leftWheels.move(-64);
+		rightWheels.move(64);
+		waitUntil((Inertial.get_heading() > 355) || (Inertial.get_heading() < 5));
+		allWheels.brake();
+		PIDMover(33);
+/*
 		// Move back, turn toward other MLZ bar, and move there
 		PIDMover(-45);
 		PIDTurner(valU);
@@ -618,60 +658,53 @@ void opcontrol() {
 		if(Master.get_digital(DIGITAL_Y)==true){
 			Indexer.move(-128);
 		} else if(Master.get_digital(DIGITAL_A)==true){
-			Indexer.move(128);
+			Indexer.move_relative(128,100);
 		} else {
 			Indexer.brake();
 		}
 
 	//Plows
-	  //Left front plow
-		if((Master.get_digital(DIGITAL_L2)==true)&&(pfl==false)){
+	  //Front plows
+		if((Master.get_digital(DIGITAL_L2)==true)&&(pf==false)){
 			plowFrontLeft.set_value(true);
-			waitUntil(Master.get_digital(DIGITAL_L2)==false);
-			pfl = true;
-		}
-		if((Master.get_digital(DIGITAL_L2)==true)&&(pfl==true)){
-			plowFrontLeft.set_value(false);
-			waitUntil(Master.get_digital(DIGITAL_L2)==false);
-			pfl = false;
-		}
-
-	  //Left back plow
-		if((Master.get_digital(DIGITAL_L1)==true)&&(pbl==false)){
-			plowBackLeft.set_value(true);
-			waitUntil(Master.get_digital(DIGITAL_L1)==false);
-			pbl = true;
-		}
-		if((Master.get_digital(DIGITAL_L1)==true)&&(pbl==true)){
-			plowBackLeft.set_value(false);
-			waitUntil(Master.get_digital(DIGITAL_L1)==false);
-			pbl = false;
-		}
-
-	  //Right front plow
-		if((Master.get_digital(DIGITAL_R2)==true)&&(pfr==false)){
 			plowFrontRight.set_value(true);
-			waitUntil(Master.get_digital(DIGITAL_R2)==false);
-			pfr = true;
+			waitUntil(Master.get_digital(DIGITAL_L2)==false);
+			pf = true;
 		}
-		if((Master.get_digital(DIGITAL_R2)==true)&&(pfr==true)){
+		if((Master.get_digital(DIGITAL_L2)==true)&&(pf==true)){
+			plowFrontLeft.set_value(false);
 			plowFrontRight.set_value(false);
-			waitUntil(Master.get_digital(DIGITAL_R2)==false);
-			pfr = false;
+			waitUntil(Master.get_digital(DIGITAL_L2)==false);
+			pf = false;
 		}
 
-	  //Right back plow
-		if((Master.get_digital(DIGITAL_R1)==true)&&(pbr==false)){
+		if((Master.get_digital(DIGITAL_R2)==true)&&(pf==false)){
+			plowFrontLeft.set_value(true);
+			plowFrontRight.set_value(true);
+			waitUntil(Master.get_digital(DIGITAL_L2)==false);
+			pf = true;
+		}
+		if((Master.get_digital(DIGITAL_R2)==true)&&(pf==true)){
+			plowFrontLeft.set_value(false);
+			plowFrontRight.set_value(false);
+			waitUntil(Master.get_digital(DIGITAL_L2)==false);
+			pf = false;
+		}
+
+	  //Back plows
+		if(((Master.get_digital(DIGITAL_L1)==true)||(Master.get_digital(DIGITAL_R1)==true))&&(pb==false)){
+			plowBackLeft.set_value(true);
 			plowBackRight.set_value(true);
-			waitUntil(Master.get_digital(DIGITAL_R1)==false);
-			pbr = true;
+			waitUntil(Master.get_digital(DIGITAL_L1)==false);
+			pb = true;
 		}
-		if((Master.get_digital(DIGITAL_R1)==true)&&(pbr==true)){
+		if(((Master.get_digital(DIGITAL_L1)==true)||(Master.get_digital(DIGITAL_R1)==true))&&(pb==true)){
+			plowBackLeft.set_value(false);
 			plowBackRight.set_value(false);
-			waitUntil(Master.get_digital(DIGITAL_R1)==false);
-			pbr = false;
+			waitUntil(Master.get_digital(DIGITAL_L1)==false);
+			pb = false;
 		}
-	
+
 	  //Shield
 		if((Master.get_digital(DIGITAL_B)==true)&&(shieldRaised==false)){
 			Shield.set_value(true);
@@ -683,11 +716,6 @@ void opcontrol() {
 			waitUntil(Master.get_digital(DIGITAL_B)==false);
 			shieldRaised = false;
 		}
-
-	  //
-	  	//if(){
-
-		//}
 		pros::delay(20);
 	}
 }

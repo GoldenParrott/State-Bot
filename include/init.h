@@ -27,10 +27,10 @@ pros::Motor_Group allWheels({frontLeft, middleLeft, backLeft, frontRight, middle
 //ABCDEFGH
 //12345678
 //Pnuematics
-pros::ADIDigitalOut plowFrontLeft(5);
-pros::ADIDigitalOut plowBackLeft(7);
-pros::ADIDigitalOut plowFrontRight(2);
-pros::ADIDigitalOut plowBackRight(3);
+    pros::ADIDigitalOut plowFrontLeft(5);
+    pros::ADIDigitalOut plowFrontRight(2);
+    pros::ADIDigitalOut plowBackLeft(7);
+    pros::ADIDigitalOut plowBackRight(3);
 
 pros::ADIDigitalOut Shield(1);
 
@@ -42,10 +42,8 @@ int drvtrFB;
 int drvtrLR;
 
 int autonnumber;
-bool pfl = false;
-bool pbl = false;
-bool pfr = false;
-bool pbr = false;
+bool pf = false;
+bool pb = false;
 
 bool shieldRaised = false;
 bool hk = false;
