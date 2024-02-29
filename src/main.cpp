@@ -656,35 +656,53 @@ void opcontrol() {
 
 	//Indexer
 		if(Master.get_digital(DIGITAL_Y)==true){
+			indxrmove = true;
+			Indexer.set_brake_mode(MOTOR_BRAKE_COAST);
 			Indexer.move(-128);
 		} else if(Master.get_digital(DIGITAL_A)==true){
-			Indexer.move_relative(128,100);
+			indxrmove = true;
+			Indexer.set_brake_mode(MOTOR_BRAKE_COAST);
+			Indexer.move(128);
+		} else if(Master.get_digital(DIGITAL_X)==true){
+			Indexer.set_brake_mode(MOTOR_BRAKE_HOLD);
+			indxrmove = true;
+			Indexer.move_relative(-1500,100);
+			pros::delay(750);
+			indxrmove = false;
 		} else {
+			Indexer.brake();
+		}
+
+		if ((Master.get_digital(DIGITAL_Y)==false)&&(Master.get_digital(DIGITAL_A)==false)){
+			indxrmove = false;
+		}
+		
+		if(indxrmove == false){
 			Indexer.brake();
 		}
 
 	//Plows
 	  //Front plows
-		if((Master.get_digital(DIGITAL_L2)==true)&&(pf==false)){
+		if((Master.get_digital(DIGITAL_L2))&&(pf==false)){
 			plowFrontLeft.set_value(true);
 			plowFrontRight.set_value(true);
 			waitUntil(Master.get_digital(DIGITAL_L2)==false);
 			pf = true;
 		}
-		if((Master.get_digital(DIGITAL_L2)==true)&&(pf==true)){
+		if((Master.get_digital(DIGITAL_L2))&&(pf==true)){
 			plowFrontLeft.set_value(false);
 			plowFrontRight.set_value(false);
 			waitUntil(Master.get_digital(DIGITAL_L2)==false);
 			pf = false;
 		}
 
-		if((Master.get_digital(DIGITAL_R2)==true)&&(pf==false)){
+		if((Master.get_digital(DIGITAL_R2))&&(pf==false)){
 			plowFrontLeft.set_value(true);
 			plowFrontRight.set_value(true);
 			waitUntil(Master.get_digital(DIGITAL_L2)==false);
 			pf = true;
 		}
-		if((Master.get_digital(DIGITAL_R2)==true)&&(pf==true)){
+		if((Master.get_digital(DIGITAL_R2))&&(pf==true)){
 			plowFrontLeft.set_value(false);
 			plowFrontRight.set_value(false);
 			waitUntil(Master.get_digital(DIGITAL_L2)==false);

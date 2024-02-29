@@ -49,4 +49,6 @@ bool shieldRaised = false;
 bool hk = false;
 bool rta = false;
 
+bool indxrmove = false;
+
 #endif
