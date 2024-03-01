@@ -434,7 +434,6 @@ void autonomous() {
 
 
 		plowBackRight.set_value(false);
-		plowFrontRight.set_value(true);
 		Intake.move(128);
 		pros::delay(200);
 		PIDMover(42);
@@ -474,33 +473,161 @@ void autonomous() {
 		allWheels.move(128);
 		pros::delay(1000);
 		allWheels.brake();
-	}
-	else if (autonnumber == 3) {
+	}else if (autonnumber == 5) {
+		// Loser Far Autonomous
+	/*
+		allWheels.move(128);
+		pros::delay(1000);
+		allWheels.brake();
+	*/
+		PIDMover(20);
+		
+	}else if (autonnumber == 3) {
 		// Autonomous Skills
 
 		allWheels.set_brake_modes(MOTOR_BRAKE_BRAKE);
 		
 		// Line up with MLZ bar
 		allWheels.move(-64);
-		waitUntil((Inertial.get_heading() > 333) && (Inertial.get_heading() < 343));
+		waitUntil((Inertial.get_heading() > 90) && (Inertial.get_heading() < 350));
 		allWheels.brake();
 
 		// Shooting triballs
 		plowBackRight.set_value(true);
 		Indexer.move(-128);
 		pros::delay(1000);
+		//pros::delay(33000);
 		Indexer.brake();
 		plowBackRight.set_value(false);
 
 		// Turning and moving down the straightaway
 		leftWheels.move(64);
 		rightWheels.move(-64);
-		waitUntil((Inertial.get_heading() > 350) || (Inertial.get_heading() < 5));
+		waitUntil(Inertial.get_heading() > 350);
 		allWheels.brake();
 		Intake.move(128);
-		PIDMover(85);
+		PIDMover(83);
 		Master.print(0, 0, "QK");
 
+
+
+
+
+
+		//turns and drives to the middle of the field
+		PIDTurner(260,1);
+		PIDMover(24);
+		leftWheels.move(-64);
+		rightWheels.move(64);
+		waitUntil((Inertial.get_heading() > 220) && (Inertial.get_heading() < 235));
+		allWheels.brake();
+		PIDMover(27);
+
+		//turns parrallel the Barrier
+		leftWheels.move(64);
+		rightWheels.move(-64);
+		waitUntil((Inertial.get_heading() > 240) && (Inertial.get_heading() < 275));
+		allWheels.brake();
+
+		//drive to line up for the first push
+		PIDMover(20);
+
+		//turns for the first push
+		leftWheels.move(-64);
+		rightWheels.move(64);
+		waitUntil((Inertial.get_heading() > 187) && (Inertial.get_heading() < 213));
+		allWheels.brake();
+		pros::delay(250);
+
+		//sets plows down and drives to goal
+		plowBackRight.set_value(true);
+		allWheels.move(-128);
+		pros::delay(1500);
+		allWheels.brake();
+
+		//back away from the goal & plows up
+		plowBackRight.set_value(false);
+		PIDMover(34);
+		
+
+		//turns parrallel the Barrier
+		leftWheels.move(32);
+		rightWheels.move(-32);
+		waitUntil((Inertial.get_heading() > 255) && (Inertial.get_heading() < 265));
+		allWheels.brake();
+
+		//moves along the Barrier
+		PIDMover(40);
+
+		//truns for the second push
+		leftWheels.move(-32);
+		rightWheels.move(32);
+		waitUntil((Inertial.get_heading() > 205) && (Inertial.get_heading() < 215));
+		allWheels.brake();
+
+		pros::delay(200);
+		//does the second push
+		plowBackRight.set_value(true);
+		plowBackLeft.set_value(true);
+		allWheels.move(-128);
+		pros::delay(2000);
+		allWheels.brake();
+
+		//drive away from the goal
+		PIDMover(16);
+		plowBackRight.set_value(false);
+		plowBackLeft.set_value(false);
+
+		//turn to edge on field
+		leftWheels.move(-32);
+		rightWheels.move(32);
+		waitUntil((Inertial.get_heading() > 85) && (Inertial.get_heading() < 95));
+		allWheels.brake();
+
+		pros::delay(200);
+
+		//drive to edge of field
+		PIDMover(62);
+
+		//turn to do final push
+		leftWheels.move(64);
+		rightWheels.move(-64);
+		waitUntil((Inertial.get_heading() > 140) && (Inertial.get_heading() < 180));
+		allWheels.brake();
+
+		pros::delay(200);
+
+		//do final push
+		rightWheels.move(-50);
+		leftWheels.move(-128);
+		pros::delay(3000);
+
+		for(int i=0;i<3;i++){
+
+			allWheels.move(128);
+			pros::delay(500);
+			allWheels.move(-128);
+			pros::delay(250);
+
+		}
+		allWheels.move(128);
+		pros::delay(200);
+		allWheels.brake();
+/*
+		leftWheels.move(-32);
+		rightWheels.move(32);
+		waitUntil((Inertial.get_heading() > 180) && (Inertial.get_heading() < 185));
+		allWheels.brake();
+		plowBackLeft.set_value(true);
+		plowBackRight.set_value(true);
+		allWheels.move(-128);
+		pros::delay(3000);
+		allWheels.brake();
+		Intake.brake();
+
+
+
+/*
 		// Ram into goal, back up, ram into goal again, then back up again
 		// rSide full, lSide 90% for 2 seconds
 		// back up for 1/2 second
@@ -508,7 +635,7 @@ void autonomous() {
 		// back up WITH PID 
 		leftWheels.move(-64);
 		rightWheels.move(32);
-		waitUntil((Inertial.get_heading() > 325) && (Inertial.get_heading() < 350));
+		waitUntil((Inertial.get_heading() > 325) && (Inertial.get_heading() < 345));
 		plowFrontLeft.set_value(true);
 		allWheels.brake();
 		pros::delay(200);
@@ -519,13 +646,12 @@ void autonomous() {
 		while (!(Inertial.get_heading() > 270) && (Inertial.get_heading() < 280))
 		{
 			if((Inertial.get_heading() > 355) || (Inertial.get_heading() < 5)){
-				leftWheels.move(-64);
-				rightWheels.move(64);
-				waitUntil((Inertial.get_heading() > 270) && (Inertial.get_heading() < 280))
-				allWheels.brake();
+				PIDTurner(275, 1);
 			}
 		}
-		
+
+		pros::delay(1250);
+
 		leftWheels.move(128);
 		rightWheels.move(128);
 		pros::delay(750);
@@ -533,47 +659,29 @@ void autonomous() {
 
 		leftWheels.move(-128);
 		rightWheels.move(-128);
-		pros::delay(500);
-		allWheels.brake();
-		
-		leftWheels.move(128);
-		rightWheels.move(128);
-		pros::delay(750);
-		allWheels.brake();
-		
-		leftWheels.move(-128);
-		rightWheels.move(-128);
-		pros::delay(300);
+		pros::delay(250);
 		allWheels.brake();
 
-		leftWheels.move(-64);
-		rightWheels.move(-32);
 		plowFrontLeft.set_value(false);
-		waitUntil((Inertial.get_heading() > 235) && (Inertial.get_heading() < 245));
-		allWheels.brake();
+		PIDTurner(120,1);
 
-		//PIDTurner(210, 1);
+		leftWheels.move(-128);
+		rightWheels.move(-128);
 		pros::delay(500);
-		// Turn to center of field, then move there
-		//PIDTurner(195, 1);
-		
-		leftWheels.move(-64);
-		rightWheels.move(64);
-		waitUntil((Inertial.get_heading() > 215) && (Inertial.get_heading() < 225));
 		allWheels.brake();
-		pros::delay(200);
-
+		
+		PIDMover(-7);
+*/
+/*
+		// Turn to center of field, then move there
+		plowFrontLeft.set_value(false);
+		PIDTurner(210,1);
 		PIDMover(48);
 
 
 		// Turn to face goal and move there
 		//PIDTurner(anotherValue);
-		leftWheels.move(64);
-		rightWheels.move(-64);
-		waitUntil((Inertial.get_heading() > 50) && (Inertial.get_heading() < 70));
-		leftWheels.move(32);
-		rightWheels.move(-32);
-		waitUntil((Inertial.get_heading() > 140) && (Inertial.get_heading() < 160));
+		PIDTurner(170,1);
 		plowBackLeft.set_value(true);
 		plowBackRight.set_value(true);
 		allWheels.brake();
