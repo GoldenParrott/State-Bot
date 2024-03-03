@@ -1,6 +1,8 @@
 #include "main.h"
 #include "init.h"
 #include "pid.h"
+#include "math.h"
+
 
 void allWheelsMoveSteady(int power) {
 	int heading = Inertial.get_heading();
@@ -399,7 +401,7 @@ void competition_initialize() {}
  */
 void autonomous() {
 	Shield.set_value(false);
-	autonnumber = 3;
+	autonnumber = 1;
 	if (autonnumber == 1) {
 		// Near Autonomous
 
@@ -427,16 +429,16 @@ void autonomous() {
 		// Move down the straightaway, bringing all Triballs with us
 		leftWheels.move(-64);
 		rightWheels.move(64);
-		waitUntil((Inertial.get_heading() > 35) && (Inertial.get_heading() < 45));
+		waitUntil((Inertial.get_heading() > 15) && (Inertial.get_heading() < 35));
 		allWheels.brake();
-		pros::delay(1000);
-		PIDTurner(95, 2);
-
-
 		plowBackRight.set_value(false);
+		pros::delay(1000);
+		PIDTurner(100, 2);
+
+
 		Intake.move(128);
 		pros::delay(200);
-		PIDMover(42);
+		PIDMover(40);
 		Intake.brake();
 
 		PIDMover(-1.5);
@@ -447,26 +449,69 @@ void autonomous() {
 		// Bringing down the intake
 		allWheels.move(-128);
 		pros::delay(100);
-		allWheels.move(128);
-		pros::delay(100);
 		allWheels.brake();
+
+		pros::delay(250);
+
+		
 
 		// Intake the Triball in front of the robot and move back
 		Intake.move(-128);
-		// PIDMove(-something);
+		PIDMover(30);
+		PIDMover(-37);
 
 		// Turn and scoop the Triball in the MLZ, then turn toward the goal
+		leftWheels.move(-32);
+		rightWheels.move(32);
+		waitUntil((Inertial.get_heading() > 320) && (Inertial.get_heading() < 340));
+		allWheels.brake();
+			
+		plowBackLeft.set_value(true);
+		
+		PIDMover(-22);
 		// PIDTurn();
-		// extend
-		// PIDMove(-);
-		// PIDTurn();
+		plowBackLeft.set_value(false);
+
+		leftWheels.move(-64);
+		rightWheels.move(64);
+		waitUntil((Inertial.get_heading() > 300) && (Inertial.get_heading() < 320));
+		allWheels.brake();
 
 
-		// Move to goal
-		// PIDMove(-);
-		// retract
-		// PIDTurn(180);
-		// PIDMove(-);
+
+
+
+		allWheels.move(-128);
+		pros::delay(1000);
+
+
+
+
+
+		for(int i=0;i<3;i++){
+
+			allWheels.move(128);
+			pros::delay(200);
+			allWheels.move(-128);
+			pros::delay(500);
+		}
+
+
+		PIDMover(16);
+
+		PIDTurner(90,2);
+
+		Intake.move(128);
+
+		allWheels.move(128);
+		pros::delay(1000);
+		allWheels.brake();
+		Intake.brake();
+
+		allWheels.move(-128);
+		pros::delay(500);
+		allWheels.brake();
+		
 	}
 	else if (autonnumber == 4) {
 		// Loser Far Autonomous
@@ -495,8 +540,8 @@ void autonomous() {
 		// Shooting triballs
 		plowBackRight.set_value(true);
 		Indexer.move(-128);
-		pros::delay(1000);
-		//pros::delay(33000);
+		//pros::delay(1000);
+		pros::delay(32000);
 		Indexer.brake();
 		plowBackRight.set_value(false);
 
@@ -530,7 +575,7 @@ void autonomous() {
 		allWheels.brake();
 
 		//drive to line up for the first push
-		PIDMover(20);
+		PIDMover(25);
 
 		//turns for the first push
 		leftWheels.move(-64);
@@ -557,15 +602,31 @@ void autonomous() {
 		allWheels.brake();
 
 		//moves along the Barrier
-		PIDMover(40);
+		//PIDMover(40);
 
-		//truns for the second push
-		leftWheels.move(-32);
-		rightWheels.move(32);
-		waitUntil((Inertial.get_heading() > 205) && (Inertial.get_heading() < 215));
+			allWheels.move_relative((4*3.14*110),100);
+
+			pros::delay(1500);
+
+
+			allWheels.brake();
+			pros::delay(500);
+
+		//turns for the second push
+		leftWheels.move(-64);
+		rightWheels.move(64);
+		waitUntil((Inertial.get_heading() > 195) && (Inertial.get_heading() < 205));
 		allWheels.brake();
 
 		pros::delay(200);
+
+		leftWheels.move(32);
+		rightWheels.move(-32);
+		waitUntil((Inertial.get_heading() > 215) && (Inertial.get_heading() < 225));
+		allWheels.brake();
+
+		pros::delay(200);
+
 		//does the second push
 		plowBackRight.set_value(true);
 		plowBackLeft.set_value(true);
@@ -574,20 +635,20 @@ void autonomous() {
 		allWheels.brake();
 
 		//drive away from the goal
-		PIDMover(16);
+		PIDMover(14);
 		plowBackRight.set_value(false);
 		plowBackLeft.set_value(false);
 
 		//turn to edge on field
 		leftWheels.move(-32);
 		rightWheels.move(32);
-		waitUntil((Inertial.get_heading() > 85) && (Inertial.get_heading() < 95));
+		waitUntil((Inertial.get_heading() > 45) && (Inertial.get_heading() < 94));
 		allWheels.brake();
 
 		pros::delay(200);
 
 		//drive to edge of field
-		PIDMover(62);
+		PIDMover(53);
 
 		//turn to do final push
 		leftWheels.move(64);
@@ -598,16 +659,16 @@ void autonomous() {
 		pros::delay(200);
 
 		//do final push
-		rightWheels.move(-50);
+		rightWheels.move(-70);
 		leftWheels.move(-128);
 		pros::delay(3000);
 
 		for(int i=0;i<3;i++){
 
 			allWheels.move(128);
-			pros::delay(500);
+			pros::delay(300);
 			allWheels.move(-128);
-			pros::delay(250);
+			pros::delay(600);
 
 		}
 		allWheels.move(128);
